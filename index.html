@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Yodstream – ไลฟ์หลายช่องทางใน OBS</title>
+<meta name="description" content="Yodstream ปลั๊กอิน OBS ไลฟ์พร้อมกันหลายแพลตฟอร์ม ภาพแนวตั้ง 9:16 แชทรวมทุกช่องทาง อ่านแชทเป็นเสียง ธีมและกรอบกล้อง คลิปไฮไลต์ และสถิติไลฟ์">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0b0d16; --panel: #141826; --panel-2: #1b2133; --line: #262d44;
+    --text: #eef1fa; --muted: #9aa3bd; --cyan: #25f4ee; --pink: #fe2c55;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font-family: "Noto Sans Thai", "Leelawadee UI", "Segoe UI", sans-serif; line-height: 1.6; }
+  a { color: var(--cyan); }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 16px; }
+
+  header.top { position: sticky; top: 0; z-index: 10; background: rgba(11,13,22,.85); backdrop-filter: blur(10px);
+               border-bottom: 1px solid var(--line); }
+  header.top .wrap { display: flex; align-items: center; justify-content: space-between; height: 60px; gap: 12px; }
+  .logo { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 20px; color: var(--text); text-decoration: none; }
+  .logo-mark { width: 30px; height: 30px; border-radius: 9px; background: linear-gradient(135deg, var(--cyan), var(--pink));
+               display: grid; place-items: center; color: #0b0d16; font-weight: 800; }
+  nav a { color: var(--muted); text-decoration: none; margin-left: 18px; font-size: 15px; }
+  nav a:hover { color: var(--text); }
+  @media (max-width: 640px) { nav a:not(.cta-small) { display: none; } }
+  .cta-small { color: #0b0d16 !important; background: var(--cyan); padding: 6px 14px; border-radius: 999px; font-weight: 600; }
+
+  .hero { position: relative; overflow: hidden; padding: 80px 0 64px; text-align: center; }
+  .hero::before { content: ""; position: absolute; inset: -30% -10% auto; height: 520px; z-index: -1; filter: blur(80px); opacity: .45;
+                  background: radial-gradient(circle at 30% 50%, var(--cyan), transparent 45%),
+                              radial-gradient(circle at 70% 50%, var(--pink), transparent 45%); }
+  .badge { display: inline-block; padding: 4px 12px; border: 1px solid var(--line); border-radius: 999px; color: var(--muted);
+           font-size: 14px; background: rgba(20,24,38,.7); }
+  h1 { font-size: clamp(34px, 6vw, 60px); line-height: 1.15; margin: 18px 0 12px; font-weight: 800; }
+  h1 .grad { background: linear-gradient(90deg, var(--cyan), var(--pink)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .lead { color: var(--muted); font-size: clamp(16px, 2.2vw, 20px); max-width: 720px; margin: 0 auto 30px; }
+  .download { display: inline-flex; align-items: center; gap: 10px; padding: 14px 26px; border-radius: 14px; font-size: 18px;
+              font-weight: 800; color: #0b0d16; text-decoration: none; background: linear-gradient(90deg, var(--cyan), #7af7f3);
+              box-shadow: 0 0 34px rgba(37,244,238,.35); }
+  .download:hover { transform: translateY(-1px); }
+  .meta { margin-top: 14px; color: var(--muted); font-size: 14px; }
+  .meta code { font-size: 12px; word-break: break-all; }
+
+  section { padding: 56px 0; }
+  h2 { font-size: clamp(26px, 4vw, 36px); margin: 0 0 8px; }
+  .sub { color: var(--muted); margin: 0 0 28px; }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 20px; }
+  .card .icon { font-size: 28px; }
+  .card h3 { margin: 8px 0 6px; font-size: 19px; }
+  .card p { margin: 0; color: var(--muted); font-size: 15px; }
+  .card ul { margin: 8px 0 0; padding-left: 18px; color: var(--muted); font-size: 15px; }
+
+  .platforms { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip { padding: 6px 12px; border-radius: 999px; background: var(--panel-2); border: 1px solid var(--line); font-size: 14px; }
+
+  ol.steps { counter-reset: s; list-style: none; padding: 0; margin: 0; display: grid; gap: 12px; }
+  ol.steps li { counter-increment: s; background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 16px 16px 16px 60px; position: relative; }
+  ol.steps li::before { content: counter(s); position: absolute; left: 16px; top: 14px; width: 30px; height: 30px; border-radius: 50%;
+                        display: grid; place-items: center; font-weight: 800; color: #0b0d16; background: var(--cyan); }
+
+  .req { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; }
+  details { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 14px 18px; margin-bottom: 10px; }
+  summary { cursor: pointer; font-weight: 600; }
+  details p { color: var(--muted); margin: 10px 0 0; }
+
+  footer { border-top: 1px solid var(--line); padding: 28px 0 40px; color: var(--muted); font-size: 14px; }
+  footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <a class="logo" href="#"><span class="logo-mark">Y</span>Yodstream</a>
+    <nav>
+      <a href="#features">ทำอะไรได้</a>
+      <a href="#install">วิธีติดตั้ง</a>
+      <a href="#faq">คำถาม</a>
+      <a class="cta-small" href="#download">ดาวน์โหลด</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="hero" id="download">
+    <div class="wrap">
+      <span class="badge">ปลั๊กอินฟรีสำหรับ OBS Studio · Windows</span>
+      <h1>ไลฟ์ทีเดียว <span class="grad">ออกทุกช่องทาง</span></h1>
+      <p class="lead">ไลฟ์ YouTube, TikTok, Facebook และอีกหลายช่องทางพร้อมกันจาก OBS พร้อมภาพแนวตั้ง 9:16 แชทรวมทุกช่อง อ่านแชทเป็นเสียง ธีมสวยๆ คลิปไฮไลต์ และสถิติไลฟ์ ทั้งหมดในหน้าเดียว</p>
+      <a class="download" href="https://github.com/Yoddoych/yodstream/releases/latest/download/Yodstream-Setup.exe">⬇ ดาวน์โหลด Yodstream</a>
+      <div class="meta">
+        เวอร์ชัน 0.1.0 · ไฟล์ติดตั้ง 10.4 MB · Windows 10/11 · OBS Studio 31 ขึ้นไป<br>
+        SHA-256: <code>02e53d6d4f27f3aa5ee2101f5533cee6cdd8371ac0ae3700053560cac60c4c80</code>
+      </div>
+    </div>
+  </section>
+
+  <section id="features">
+    <div class="wrap">
+      <h2>ทำอะไรได้บ้าง</h2>
+      <p class="sub">ทุกอย่างอยู่ในหน้าต่างเล็กๆ (Dock) ใน OBS ภาษาไทยทั้งหมด</p>
+      <div class="grid">
+        <div class="card"><div class="icon">📡</div><h3>ไลฟ์หลายช่องทางพร้อมกัน</h3>
+          <p>เพิ่มปลายทางได้ไม่จำกัด เริ่ม/หยุดทีละช่องหรือทั้งหมดในคลิกเดียว มีปุ่ม Auto ตั้งค่าคุณภาพให้เหมาะกับแต่ละแพลตฟอร์ม และใช้การ์ดจอเข้ารหัสภาพเพื่อไม่ให้เครื่องหนัก</p></div>
+        <div class="card"><div class="icon">📱</div><h3>ภาพแนวตั้ง 9:16</h3>
+          <p>สร้างภาพแนวตั้งแยกจากภาพหลัก จัดวางเองได้แบบลากวาง เช่น เกมด้านบน กล้องด้านล่าง ส่งไป TikTok หรือ YouTube แนวตั้ง (ไลฟ์คู่แนวนอน+แนวตั้งบน YouTube ได้)</p></div>
+        <div class="card"><div class="icon">💬</div><h3>แชทรวมทุกช่องทาง</h3>
+          <p>รวมแชท YouTube, Twitch และ Kick ไว้ที่เดียว เลือกได้ว่าจะให้แชทช่องไหนขึ้นจอ พร้อมแชทบนจอแบบสวยๆ สำหรับใส่ในไลฟ์</p></div>
+        <div class="card"><div class="icon">🔊</div><h3>อ่านแชทเป็นเสียงภาษาไทย</h3>
+          <p>เปิด/ปิดได้ในคลิกเดียว เลือกได้ว่าให้คนดูได้ยินด้วยหรือได้ยินแค่เรา เลือกลำโพง ปรับความเร็ว ความดัง และเสียงสูง-ต่ำได้</p></div>
+        <div class="card"><div class="icon">👁</div><h3>จำนวนผู้ชมบนจอ</h3>
+          <p>แสดงคนดูแยกแต่ละช่องทางพร้อมยอดรวม (YouTube, TikTok, Twitch, Kick) เลือกได้ว่าจะโชว์ช่องไหน</p></div>
+        <div class="card"><div class="icon">🎨</div><h3>ธีมและกรอบกล้อง</h3>
+          <p>ธีมสำเร็จรูป นีออนเกมมิ่ง มินิมอล พาสเทล หรือสีแบรนด์ของคุณเอง กรอบกล้องมุมโค้ง/วงกลม ขอบไล่สี และแสงเรือง เปลี่ยนธีมแล้วทุกอย่างเปลี่ยนตาม</p></div>
+        <div class="card"><div class="icon">🏷</div><h3>ป้ายและฉากสำเร็จรูป</h3>
+          <ul><li>ป้าย LIVE พร้อมเวลาที่ไลฟ์</li><li>ป้ายชื่อ และข้อความวิ่ง</li><li>ฉาก "เริ่มเร็วๆ นี้" พร้อมนับถอยหลัง, "พักเบรก", "จบไลฟ์"</li></ul></div>
+        <div class="card"><div class="icon">✨</div><h3>แต่งหน้ากล้องแบบ AI</h3>
+          <p>ผิวเนียน หน้าใส ปรับสี ฟิลเตอร์สำเร็จรูป และ AI ตามหน้าอัตโนมัติ (หน้าเรียว ตาโต) ประมวลผลในเครื่อง ไม่ส่งภาพออกไปไหน</p></div>
+        <div class="card"><div class="icon">📲</div><h3>สะท้อนหน้าจอมือถือ</h3>
+          <p>เอาจอ Android (สาย USB) หรือ iPhone/iPad (AirPlay) ขึ้นไลฟ์ กดปุ่มเดียวใส่ลงฉากหรือภาพแนวตั้ง เหมาะกับเกมมือถือ</p></div>
+        <div class="card"><div class="icon">✂️</div><h3>คลิปไฮไลต์แนวตั้ง</h3>
+          <p>กดปุ่มหรือคีย์ลัดตอนมีจังหวะเด็ด ได้คลิปแนวตั้งทันที หรือเลือกตัดจากไลฟ์ทั้งไลฟ์หลังจบ ระบบเรียงช่วงที่แชทคึกคักที่สุดไว้ให้ พร้อมคิดชื่อคลิป รายละเอียด และแฮชแท็กให้ ถามก่อนโพสต์ทุกครั้ง</p></div>
+        <div class="card"><div class="icon">📊</div><h3>สถิติไลฟ์</h3>
+          <p>เก็บคนดูและแชทรายนาทีของทุกไลฟ์ ดูกราฟย้อนหลัง และสรุปว่าไลฟ์เวลาไหน ยาวแค่ไหน ชื่อแบบไหนคนดูเยอะสุด</p></div>
+        <div class="card"><div class="icon">🔔</div><h3>แจ้งเตือนเมื่อสัญญาณหลุด</h3>
+          <p>ถ้าช่องไหนหลุดหรือกำลังต่อใหม่ จะมีแจ้งเตือนบนจอ เสียงเตือน และไอคอน OBS กะพริบที่แถบงาน รู้ทันทีไม่ต้องคอยเช็ค</p></div>
+        <div class="card"><div class="icon">🎚</div><h3>เสียงและไมค์</h3>
+          <p>เลือก Track เสียงแยกแต่ละปลายทาง และเตือนเมื่อไมค์ไม่ได้ออกไลฟ์ จะไม่ไลฟ์ไปเงียบๆ โดยไม่รู้ตัว</p></div>
+        <div class="card"><div class="icon">⌨️</div><h3>คีย์ลัดและสรุปสด</h3>
+          <p>ตั้งคีย์ลัดเริ่ม/หยุดแต่ละช่อง หรือเก็บไฮไลต์ แถบสรุปบอกเวลาไลฟ์ ความเร็วอัปโหลด เฟรมหลุด และยอดคนดู</p></div>
+        <div class="card"><div class="icon">🔒</div><h3>เก็บ key อย่างปลอดภัย</h3>
+          <p>Stream key และ API key ถูกเข้ารหัสด้วยระบบของ Windows ไม่เก็บเป็นข้อความธรรมดา</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <h2>ช่องทางที่ตั้งค่าไว้ให้แล้ว</h2>
+      <p class="sub">เลือกจากรายการแล้วใส่ stream key ได้เลย หรือใส่ RTMP เองสำหรับช่องทางอื่น</p>
+      <div class="platforms">
+        <span class="chip">YouTube</span><span class="chip">Facebook Live</span><span class="chip">TikTok Live</span>
+        <span class="chip">Instagram Live</span><span class="chip">Twitch</span><span class="chip">Kick</span>
+        <span class="chip">X (Twitter)</span><span class="chip">Shopee Live</span><span class="chip">Lazada Live</span>
+        <span class="chip">LinkedIn Live</span><span class="chip">Trovo</span><span class="chip">Nimo TV</span>
+        <span class="chip">Bilibili</span><span class="chip">SOOP</span><span class="chip">CHZZK</span>
+        <span class="chip">Steam</span><span class="chip">Vimeo</span><span class="chip">Restream.io</span>
+        <span class="chip">RTMP อื่นๆ</span>
+      </div>
+    </div>
+  </section>
+
+  <section id="install">
+    <div class="wrap">
+      <h2>วิธีติดตั้ง</h2>
+      <p class="sub">ใช้เวลาไม่ถึง 1 นาที</p>
+      <ol class="steps">
+        <li><b>ติดตั้ง OBS Studio</b> เวอร์ชัน 31 ขึ้นไป (จาก obsproject.com หรือ Steam) ถ้ามีแล้วข้ามได้</li>
+        <li><b>ปิด OBS</b> แล้ว <a href="https://github.com/Yoddoych/yodstream/releases/latest/download/Yodstream-Setup.exe">ดาวน์โหลด Yodstream</a> และดับเบิลคลิกไฟล์เพื่อติดตั้ง</li>
+        <li>ถ้า Windows ขึ้นว่า "Windows protected your PC" ให้กด <b>More info → Run anyway</b> (ไฟล์ยังไม่มีลายเซ็นดิจิทัล)</li>
+        <li><b>เปิด OBS</b> แล้วไปที่เมนู <b>Docks</b> จะเห็นหน้าต่าง Yodstream, Vertical, Chat, Camera, Mirror และธีม ลากวางตรงไหนก็ได้</li>
+        <li>กด <b>+ เพิ่มปลายทาง</b> เลือกแพลตฟอร์ม ใส่ stream key แล้วกด <b>เริ่มทั้งหมด</b> ได้เลย</li>
+      </ol>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <h2>สิ่งที่ต้องมี</h2>
+      <div class="req">
+        <div class="card"><div class="icon">🪟</div><h3>Windows 10 / 11</h3><p>64-bit</p></div>
+        <div class="card"><div class="icon">🎥</div><h3>OBS Studio 31+</h3><p>ทดสอบกับ OBS 32.2</p></div>
+        <div class="card"><div class="icon">🎮</div><h3>การ์ดจอแนะนำ</h3><p>NVIDIA / AMD / Intel ที่เข้ารหัสภาพได้ ช่วยให้ไลฟ์หลายช่องได้ลื่น</p></div>
+        <div class="card"><div class="icon">🍎</div><h3>iPhone (ถ้าใช้)</h3><p>ต้องลง UxPlay และ Apple Bonjour เพิ่มเพื่อรับ AirPlay</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="faq">
+    <div class="wrap">
+      <h2>คำถามที่พบบ่อย</h2>
+      <details><summary>ใช้ฟรีไหม?</summary><p>ใช้ได้ฟรีทุกฟีเจอร์ในเวอร์ชันนี้</p></details>
+      <details><summary>ทำไม Windows เตือนตอนติดตั้ง?</summary><p>เพราะไฟล์ยังไม่ได้เซ็นด้วยใบรับรองผู้พัฒนา กด More info → Run anyway ได้ ตรวจสอบไฟล์ได้จากค่า SHA-256 ด้านบน</p></details>
+      <details><summary>ค่าที่ตั้งไว้ย้ายไปเครื่องอื่นได้ไหม?</summary><p>ต้องตั้งใหม่ในเครื่องใหม่ โดยเฉพาะ stream key ที่ถูกเข้ารหัสผูกกับบัญชี Windows ของเครื่องเดิมเพื่อความปลอดภัย</p></details>
+      <details><summary>ใช้กับ Mac ได้ไหม?</summary><p>ตอนนี้ไฟล์ติดตั้งมีเฉพาะ Windows</p></details>
+      <details><summary>ภาพจากกล้องถูกส่งไปที่ไหนไหม?</summary><p>ไม่ การแต่งหน้าและ AI ตามหน้าทำงานในเครื่องทั้งหมด</p></details>
+      <details><summary>ต้องเปิดเว็บไหนตอนไลฟ์ไหม?</summary><p>ไม่ต้อง ทุกอย่างอยู่ใน OBS แชทบนจอและป้ายต่างๆ ใส่เป็น Browser Source ให้อัตโนมัติ</p></details>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>Yodstream · สร้างโดย Yoddoych</span>
+    <span>เผยแพร่ภายใต้สัญญาอนุญาต GPL-2.0 · <a href="https://github.com/Yoddoych/yodstream/releases/latest">ซอร์สโค้ดและไฟล์ทั้งหมด</a></span>
+  </div>
+</footer>
+</body>
+</html>
